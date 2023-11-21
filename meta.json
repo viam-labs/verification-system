@@ -1,0 +1,13 @@
+{
+  "module_id": "viam-labs:verification-system",
+  "visibility": "public",
+  "url": "https://github.com/viam-labs/verification-system",
+  "description": "A vision service classifier that sets up a security system to detect, verify, and alarm based on specified detections.",
+  "models": [
+    {
+      "api": "rdk:service:vision",
+      "model": "viam-labs:classifier:verification-system"
+    }
+  ],
+  "entrypoint": "run.sh"
+}
