@@ -191,7 +191,7 @@ class VerificationSystem(Vision, Reconfigurable):
             elapsed_time = time.time() - self.start_time
             time_remaining = self.countdown_time_s - elapsed_time
             class_name = class_name + \
-                f": {time_remaining:.0f} s remain, Look at the camera!"
+                f": {time_remaining:.0f} s remain"
         if self.alarm_state is AlarmState.DISARMED:
             elapsed_time = time.time() - self.start_time
             time_remaining = self.disarmed_time_s - elapsed_time
