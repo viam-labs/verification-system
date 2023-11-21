@@ -1,8 +1,12 @@
 # Verification-System
 
+https://app.viam.com/module/viam-labs/verification-system
+
 A vision service module that sets up a security system to detect, verify, and alarm based on specified detections
 
 Configure this vision service as a [modular resource](https://docs.viam.com/modular-resources/) on your robot to access and perform inference.
+
+## Introduction 
 
 The module sets up a state machine with 5 states:
 1. `TRIGGER_1`: The module begins in this state. It is meant to be a coarse, fast detector, like a simple motion detector. If the detector triggers, then the state moves to `TRIGGER_2`. If no `TRIGGER_1` detector was specified in the config, the module moves immediately to state `TRIGGER_2`.
@@ -10,6 +14,8 @@ The module sets up a state machine with 5 states:
 3. `COUNTDOWN`: This state runs the `verification_detector` on every frame, looking for detections with any label from `verification_labels` with at least `verification_confidence`. If the detector triggers, then the state moves to `DISARMED`. If it doesn't trigger in the time specified by `countdown_time_s`, it moves to state `ALARM`.
 4. `ALARM`: The alarm state. The module will emit the `ALARM` classification for the amount of time specified in `alarm_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
 5. `DISARMED`: The disarmed state. The module will emit the `DISARMED` classification for the amount of time specified in `disarmed_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
+
+If you want to save images to the Viam cloud when the system enters into specific states, you can use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module.
 
 ## Config
 
