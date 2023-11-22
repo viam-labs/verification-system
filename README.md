@@ -18,6 +18,8 @@ The module sets up a state machine with 5 states:
 4. `ALARM`: The alarm state. The module will emit the `ALARM` classification for the amount of time specified in `alarm_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
 5. `DISARMED`: The disarmed state. The module will emit the `DISARMED` classification for the amount of time specified in `disarmed_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
 
+If you do not want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, you can set `disable_alarm: true` in the config, which will prevent `TRIGGER_2` from entering into the `COUNTDOWN` state, meaning the system will eventually return to `TRIGGER_1`.
+
 If you want to save images to the Viam cloud when the system enters into specific states, you can use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module.
 
 ## Config
