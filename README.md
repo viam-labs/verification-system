@@ -5,7 +5,7 @@
 
 https://app.viam.com/module/viam-labs/verification-system
 
-A vision service module that sets up a security system to detect, verify, and alarm based on specified detections
+A vision service module that sets up a system to detect, verify, and alarm based on specified detections.
 
 Configure this vision service as a [modular resource](https://docs.viam.com/modular-resources/) on your robot to access and perform inference.
 
