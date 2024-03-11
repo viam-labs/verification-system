@@ -26,13 +26,15 @@ To use this module, follow the instructions to [add a module from the Viam Regis
 > [!NOTE]
 > Before configuring your verification system, you must [create a machine](https://docs.viam.com/fleet/machines/#add-a-new-machine).
 
-Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com).Click on the **Services** subtab and click **Create service**. Select the `vision` type, then select the `classifier:verification-system` model. Enter a name for your vision service and click **Create**.
+Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com).
+Click on the **Services** subtab and click **Create service**.
+Select the `vision` type, then select the `classifier:verification-system` model.
+Enter a name for your vision service and click **Create**.
 
 On the new service panel, copy and paste the following attribute template into your vision service’s **Attributes** box. 
 
 ```json
 {
-  {
   "trigger_1_confidence": 0.35,
   "verification_detector": <your-verification-detector>,
   "camera_name": <your-camera-name>,
@@ -45,7 +47,6 @@ On the new service panel, copy and paste the following attribute template into y
   "trigger_1_detector":  <detector-name>,
   "disarmed_time_s": 10,
   "countdown_time_s": 10
-}
 }
 ```
 
@@ -60,11 +61,11 @@ The following attributes are available for `classifier:verification-system`:
 | ------------- | ------------- | ------------- | ------------- |
 | `verification_detector` | string | **Required** | The name of the vision service detector that will be used to verify the object.|
 | `camera_name` | string | **Required** | The name of the camera component to use for source images.  |
-| `trigger_1_confidence` | float | Optional | The detection confidence required to trigger the `TRIGGER_2` state.<br/>Default: `0.2`|
+| `trigger_1_confidence` | float | Optional | The detection confidence required to trigger the `TRIGGER_2` state.<br/> Default: `0.2`|
 | `trigger_1_labels` | array | Optional| The valid labels from `trigger_1_detector` for the 1st trigger.<br/> Required if `trigger_1_detector` is specified.  |
 | `verification_labels` | array | **Required** | The labels from `verification_detector` that count as valid. |
 | `trigger_1_detector` | string | Optional | The name of the vision service detector used to trigger the system to enter to verification mode. |
-| `countdown_time_s` | int | Optional | The time in seconds the system will remain in the `COUNTDOWN` state before transitioning to the `ALARM`state.<br/>Default: `20` |
+| `countdown_time_s` | int | Optional | The time in seconds the system will remain in the `COUNTDOWN` state before transitioning to the `ALARM`state.<br/> Default: `20` |
 
 #### Example configuration
 
