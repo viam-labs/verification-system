@@ -73,7 +73,7 @@ The following attributes are available for `classifier:verification-system`:
 > [!NOTE]
 > If you don’t want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, set `disable_alarm` to `"true"`, which prevents `TRIGGER_2` from entering into the `COUNTDOWN` state. 
 > Then the system will only cycle between the `TRIGGER_1` and `TRIGGER_2` states.
-- You can use the `TRIGGER_2` state as a way to send notifications.
+> You can use the `TRIGGER_2` state as a way to send notifications.
 
 #### Example configuration
 
