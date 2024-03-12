@@ -110,5 +110,5 @@ The following attributes are available for `classifier:verification-system`:
 
 ## Next steps
 
-- See [Create a Facial Verification System](https://docs.viam.com/tutorials/projects/verification-system/#configure-a-verification-system) for a complete tutorial.
-- Use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module if you want to save images to the Viam cloud when the system enters into specific states.
+- For a complete tutorial, see [Create a Facial Verification System](https://docs.viam.com/tutorials/projects/verification-system/#configure-a-verification-system).
+- To save images to the Viam cloud when the system enters into different states, use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module.
