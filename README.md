@@ -8,8 +8,11 @@ This module has the following 5 states available:
 
 | State | Description | Trigger Conditions | Next State  |
 | ------------- | ------------- | ------------- | ------------- |
-| `TRIGGER_1` | Coarse, fast detection state. | Detector: `trigger_1_detector`<br/>Labels: `trigger_1_labels`<br/>Confidence: `trigger_1_confidence` | `TRIGGER_2` |
-| `TRIGGER_2` | The secondary detection state. | Detector: `trigger_2_detector`<br/>Labels: `trigger_2_labels`<br/>Confidence: `trigger_2_confidence` | `TRIGGER_1`   |
+| `TRIGGER_1` | The initial state. A coarse, fast detector, similar to a simple motion detector. | Detector:<br/> `trigger_1_detector`<br/><br/> Labels:<br/> `trigger_1_labels`<br/><br/> Confidence:<br/> `trigger_1_confidence` | `TRIGGER_2` |
+| `TRIGGER_2` | The secondary detection state.| Detector:<br/> `trigger_2_detector`<br/><br/> Labels:<br/> `trigger_2_labels`<br/><br/> Confidence:<br/> `trigger_2_confidence` | `TRIGGER_1` or `COUNTDOWN`|
+| `COUNTDOWN` | The verification state before triggering the alarm. Enters `DISARMED` state if verification is successful, otherwise, transitions to `ALARM` after the duration set in `countdown_time_s`.| Detector:<br/> `verification_detector`<br/><br/> Labels:<br/> `verification_labels`<br/><br/> Confidence:<br/> `verification_confidence` | `DISARMED` or `ARMED`   |
+| `ALARM` | The alarm state. Signals the `ALARM` classification which lasts for specified duration before returning to `TRIGGER_1`.| Timeout:<br/> `alarm_time_s`| `TRIGGER_1`|
+| `DISARMED` | The disarmed state. Signals the `DISARMED` classification for the specified duration before returning to `TRIGGER_1`| Timeout:<br/> `disarmed_time_s`| `TRIGGER_1`|
 
 ## Requirements
 
@@ -67,6 +70,11 @@ The following attributes are available for `classifier:verification-system`:
 | `trigger_1_detector` | string | Optional | The name of the vision service detector used to trigger the system to enter to verification mode. |
 | `countdown_time_s` | int | Optional | The time in seconds the system will remain in the `COUNTDOWN` state before transitioning to the `ALARM`state.<br/> Default: `20` |
 
+> [!NOTE]
+> If you don’t want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, set `disable_alarm` to `"true"`, which prevents `TRIGGER_2` from entering into the `COUNTDOWN` state. 
+> Then the system will only cycle between the `TRIGGER_1` and `TRIGGER_2` states.
+- You can use the `TRIGGER_2` state as a way to send notifications.
+
 #### Example configuration
 
 ```json
@@ -104,5 +112,3 @@ The following attributes are available for `classifier:verification-system`:
 
 - See [Create a Facial Verification System](https://docs.viam.com/tutorials/projects/verification-system/#configure-a-verification-system) for a complete tutorial.
 - Use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module if you want to save images to the Viam cloud when the system enters into specific states.
-- If you don’t want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, set `disable_alarm` to `"true"`, which prevents `TRIGGER_2` from entering into the `COUNTDOWN` state and the system will only cycle between the `TRIGGER_1` and `TRIGGER_2` states.
-- Use entering into the state `TRIGGER_2` as a way to send notifications.
