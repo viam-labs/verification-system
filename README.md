@@ -1,6 +1,6 @@
-# Verification System
+# `verification-system` modular resource
 
-This module implements the RDK vision API in a verification-system model.
+This module implements the `rdk:vision` API in the  `verification-system` model.
 
 Machines configured with this module can enter an alarm state for unapproved individuals and disarm for approved visitors. You can enhance recognition capabilities by training an ML classification model using images of labeled visitors. 
 
