@@ -1,30 +1,83 @@
-# Verification-System
+# `verification-system` modular resource
 
-![out](https://github.com/viam-labs/verification-system/assets/8298653/7af85327-8d6f-4691-ade8-bb8e651c57c8)
+This module implements the `rdk:vision` API in the  `verification-system` model.
 
+Machines configured with this module can enter an alarm state for unapproved individuals and disarm for approved visitors. You can enhance recognition capabilities by training an ML classification model using images of labeled visitors. 
 
-https://app.viam.com/module/viam-labs/verification-system
+This module has the following 5 states available:
 
-A vision service module that sets up a system to detect, verify, and alarm based on specified detections.
+| State | Description | Trigger Conditions | Next State  |
+| ------------- | ------------- | ------------- | ------------- |
+| `TRIGGER_1` | The initial state. A coarse, fast detector, similar to a simple motion detector. | Detector:<br/> `trigger_1_detector`<br/><br/> Labels:<br/> `trigger_1_labels`<br/><br/> Confidence:<br/> `trigger_1_confidence` | `TRIGGER_2` |
+| `TRIGGER_2` | The secondary detection state.| Detector:<br/> `trigger_2_detector`<br/><br/> Labels:<br/> `trigger_2_labels`<br/><br/> Confidence:<br/> `trigger_2_confidence` | `TRIGGER_1` or `COUNTDOWN`|
+| `COUNTDOWN` | The verification state before triggering the alarm. Enters `DISARMED` state if verification is successful, otherwise, transitions to `ALARM` after the duration set in `countdown_time_s`.| Detector:<br/> `verification_detector`<br/><br/> Labels:<br/> `verification_labels`<br/><br/> Confidence:<br/> `verification_confidence` | `DISARMED` or `ARMED`   |
+| `ALARM` | The alarm state. Signals the `ALARM` classification which lasts for specified duration before returning to `TRIGGER_1`.| Timeout:<br/> `alarm_time_s`| `TRIGGER_1`|
+| `DISARMED` | The disarmed state. Signals the `DISARMED` classification for the specified duration before returning to `TRIGGER_1`| Timeout:<br/> `disarmed_time_s`| `TRIGGER_1`|
 
-Configure this vision service as a [modular resource](https://docs.viam.com/modular-resources/) on your robot to access and perform inference.
+## Requirements
 
-## Introduction 
+- [camera](https://docs.viam.com/components/camera/) (such as a [webcam](https://docs.viam.com/components/camera/webcam/))
+- 2-3 [detectors](https://docs.viam.com/ml/vision/mlmodel/)
+- [transform camera](https://docs.viam.com/components/camera/transform/) (to see detections)
 
-The module sets up a state machine with 5 states:
-1. `TRIGGER_1`: The module begins in this state. It is meant to be a coarse, fast detector, like a simple motion detector. This state runs the `trigger_1_detector` on every frame, looking for detections with any label from `trigger_1_labels` with at least `trigger_1_confidence`. If the detector triggers, then the state moves to `TRIGGER_2`. If no `TRIGGER_1` detector was specified in the config, the module moves immediately to state `TRIGGER_2`.
-2. `TRIGGER_2`: This state runs the `trigger_2_detector` on every frame, looking for detections with any label from `trigger_2_labels` with at least `trigger_2_confidence`. If the detector triggers, then the state moves to `COUNTDOWN`. If it doesn't trigger in 10 frames, it returns to state `TRIGGER_1`.
-3. `COUNTDOWN`: This state runs the `verification_detector` on every frame, looking for detections with any label from `verification_labels` with at least `verification_confidence`. If the detector triggers, then the state moves to `DISARMED`. If it doesn't trigger in the time specified by `countdown_time_s`, it moves to state `ALARM`.
-4. `ALARM`: The alarm state. The module will emit the `ALARM` classification for the amount of time specified in `alarm_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
-5. `DISARMED`: The disarmed state. The module will emit the `DISARMED` classification for the amount of time specified in `disarmed_time_s`. After that amount of time elapses, the module will return to state `TRIGGER_1`.
+## Build and run
 
-If you do not want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, you can set `disable_alarm: true` in the config, which will prevent `TRIGGER_2` from entering into the `COUNTDOWN` state. This means the system will only cycle between the states of `TRIGGER_1` and `TRIGGER_2`. A user can use entering into the state `TRIGGER_2` as a way to send notifications.
+To use this module, follow the instructions to [add a module from the Viam Registry](https://docs.viam.com/registry/configure/#add-a-modular-resource-from-the-viam-registry) and select the `classifier:verification-system` model from the [`verification-system` module](https://app.viam.com/module/viam-labs/verification-system).
 
-If you want to save images to the Viam cloud when the system enters into specific states, you can use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module.
+## Configure your verification system
 
-## Config
+> [!NOTE]
+> Before configuring your verification system, you must [create a machine](https://docs.viam.com/fleet/machines/#add-a-new-machine).
 
+Navigate to the **Config** tab of your machine's page in [the Viam app](https://app.viam.com).
+Click on the **Services** subtab and click **Create service**.
+Select the `vision` type, then select the `classifier:verification-system` model.
+Enter a name for your vision service and click **Create**.
+
+On the new service panel, copy and paste the following attribute template into your vision service’s **Attributes** box. 
+
+```json
+{
+  "trigger_1_confidence": 0.35,
+  "verification_detector": <your-verification-detector>,
+  "camera_name": <your-camera-name>,
+  "trigger_2_confidence": 0.5,
+  "trigger_1_labels": ["Person"],
+  "trigger_2_labels": ["Person"],
+  "disable_alarm": false,
+  "trigger_2_detector": <detector-name>,
+  "verification_labels": ["my_name"],
+  "trigger_1_detector":  <detector-name>,
+  "disarmed_time_s": 10,
+  "countdown_time_s": 10
+}
 ```
+
+> [!NOTE]
+> For more information, see [Configure a Robot](https://docs.viam.com/manage/configuration/).
+
+#### Attributes
+
+The following attributes are available for `classifier:verification-system`:
+
+| Name  | Type | Inclusion | Description |
+| ------------- | ------------- | ------------- | ------------- |
+| `verification_detector` | string | **Required** | The name of the vision service detector that will be used to verify the object.|
+| `camera_name` | string | **Required** | The name of the camera component to use for source images.  |
+| `trigger_1_confidence` | float | Optional | The detection confidence required to trigger the `TRIGGER_2` state.<br/> Default: `0.2`|
+| `trigger_1_labels` | array | Optional| The valid labels from `trigger_1_detector` for the 1st trigger.<br/> Required if `trigger_1_detector` is specified.  |
+| `verification_labels` | array | **Required** | The labels from `verification_detector` that count as valid. |
+| `trigger_1_detector` | string | Optional | The name of the vision service detector used to trigger the system to enter to verification mode. |
+| `countdown_time_s` | int | Optional | The time in seconds the system will remain in the `COUNTDOWN` state before transitioning to the `ALARM`state.<br/> Default: `20` |
+
+> [!NOTE]
+> If you don’t want the `ALARM` capabilities, and would like to just use it as a notification system when a detector gets triggered, set `disable_alarm` to `"true"`, which prevents `TRIGGER_2` from entering into the `COUNTDOWN` state. 
+> Then the system will only cycle between the `TRIGGER_1` and `TRIGGER_2` states.
+> You can use the `TRIGGER_2` state as a way to send notifications.
+
+#### Example configuration
+
+```json
 {
   "name": "security",
   "type": "vision",
@@ -44,7 +97,7 @@ If you want to save images to the Viam cloud when the system enters into specifi
     "trigger_2_confidence": 0.5,
     "verification_detector": "face-verify",
     "verification_labels": [
-      "myName"
+      "my_name"
     ],
     "verification_confidence": 0.5,
     "countdown_time_s": 30,
@@ -53,25 +106,9 @@ If you want to save images to the Viam cloud when the system enters into specifi
     "disable_alarm": false
   }
 }
-
 ```
-### Attributes
 
+## Next steps
 
-| Name | Type | Inclusion | Description |
-| ---- | ---- | --------- | ----------- |
-| `camera_name` | string | **Required** | The name of the camera component to use for source images. |
-| `trigger_1_detector` | string | Optional | The name of the vision service detector that will be used as the first stage to trigger the system to enter verification mode. If left blank, the system will immediately transition to state `TRIGGER_2`. |
-| `trigger_1_labels` | array | Optional | The class names from `trigger_1_detector` that count as valid. Required if `trigger_1_detector` is specified. |
-| `trigger_1_confidence` | float | Optional | The detection confidence needed in order to move into the `TRIGGER_2` state. Default value is 0.2. |
-| `trigger_2_detector` | string | **Required** | The name of the vision service detector that will detect the thing that needs to be verified. |
-| `trigger_2_labels` | array | **Required** | The class names from `trigger_2_detector` that count as valid. |
-| `trigger_2_confidence` | float | Optional | The detection confidence needed in order to move into the `COUNTDOWN` state. Default value is 0.5. |
-| `verification_detector` | string | **Required** | The name of the vision service detector that will be used to verify the object. |
-| `verification_labels` | array | **Required** | The class names from `verification_detector` that count as valid. |
-| `verification_confidence` | float | Optional | The detection confidence needed in order to move into the `DISARMED` state. Default value is 0.8 |
-| `countdown_time_s` | int | Optional | The time in seconds the system will remain in state `COUNTDOWN` before transitioning to state `ALARM`. Default value is 20. |
-| `alarm_time_s` | int | Optional | The time in seconds the system will remain in  state `ALARM` before transitioning to state `TRIGGER_1`. Default value is 10. |
-| `disarmed_time_s` | int | Optional | The time in seconds the system will remain in  state `DISARMED` before transitioning to state `TRIGGER_1`. Default value is 10. |
-| `disable_alarm` | bool | Optional | Disables the `COUNTDOWN` and `ALARM` states. The system will always remain the `TRIGGER_1` and `TRIGGER_2` states. Default value is False. |
-
+- For a complete tutorial, see [Create a Facial Verification System](https://docs.viam.com/tutorials/projects/verification-system/#configure-a-verification-system).
+- To save images to the Viam cloud when the system enters into different states, use the [filtered-camera module](https://app.viam.com/module/erh/filtered-camera) in tandem with this module.
