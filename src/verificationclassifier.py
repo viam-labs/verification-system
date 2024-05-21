@@ -3,18 +3,16 @@ from typing_extensions import Self
 
 from enum import Enum
 
-from PIL import Image
-
-from viam.media.video import RawImage
+from viam.media.video import ViamImage
 
 from viam.module.types import Reconfigurable
 from viam.proto.app.robot import ComponentConfig
-from viam.proto.service.vision import Classification
-from viam.proto.common import ResourceName
+from viam.proto.service.vision import Classification, Detection
+from viam.proto.common import ResourceName, PointCloudObject
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
 
-from viam.services.vision import Vision
+from viam.services.vision import Vision, CaptureAllResult
 
 from viam.components.camera import Camera
 
@@ -162,6 +160,44 @@ class VerificationSystem(Vision, Reconfigurable):
     async def get_object_point_clouds(self):
         return
 
+    async def get_properties(
+            self,
+            *,
+            extra: Optional[Mapping[str, Any]] = None,
+            timeout: Optional[float] = None) -> Vision.Properties:
+        return Vision.Properties(
+                classifications_supported=True,
+                detections_supported=False,
+                object_point_clouds_supported=False,
+        )
+
+    async def capture_all_from_camera(
+        self,
+        camera_name: str,
+        return_image: bool = False,
+        return_classifications: bool = False,
+        return_detections: bool = False,
+        return_object_point_clouds: bool = False,
+        *,
+        extra: Optional[Mapping[str, Any]] = None,
+        timeout: Optional[float] = None,
+    ) -> CaptureAllResult:
+        result = CaptureAllResult()
+        if camera_name != self.camera_name:
+            raise Exception(
+                f"camera {camera_name} was not declared in the camera_name dependency")
+        cam_image = await self.camera.get_image(mime_type="image/jpeg")
+        if return_image:
+            result.image = cam_image
+        if return_classifications:
+            cls = await self.get_classifications(cam_image, 1)
+            result.classifications = cls
+        if return_detections:
+            result.detections = []
+        if return_object_point_clouds:
+            result.objects = []
+        return result
+
     async def get_classifications_from_camera(self,
                                               camera_name: str,
                                               count: int,
@@ -177,7 +213,7 @@ class VerificationSystem(Vision, Reconfigurable):
         return await self.get_classifications(cam_image, 1)
 
     async def get_classifications(self,
-                                  image: Union[Image.Image, RawImage],
+                                  image: ViamImage,
                                   count: int,
                                   *,
                                   extra: Optional[Dict[str, Any]] = None,
@@ -199,7 +235,7 @@ class VerificationSystem(Vision, Reconfigurable):
         classifications = [{"class_name": class_name, "confidence": 1.0}]
         return classifications
 
-    async def process_image(self, image: Union[Image.Image, RawImage]):
+    async def process_image(self, image: ViamImage):
         if self.alarm_state is AlarmState.TRIGGER_1:
             if self.trigger_1_detector is None:
                 self.alarm_state = AlarmState.TRIGGER_2  # go straight to trigger 2
