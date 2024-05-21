@@ -7,8 +7,8 @@ from viam.media.video import ViamImage
 
 from viam.module.types import Reconfigurable
 from viam.proto.app.robot import ComponentConfig
-from viam.proto.service.vision import Classification, Detection
-from viam.proto.common import ResourceName, PointCloudObject
+from viam.proto.service.vision import Classification
+from viam.proto.common import ResourceName
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
 
