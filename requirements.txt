@@ -1,2 +1,3 @@
 viam-sdk  >= 0.21.0
 pillow
+pytest-asyncio
