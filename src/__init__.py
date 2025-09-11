@@ -7,4 +7,4 @@ from viam.resource.registry import Registry, ResourceCreatorRegistration
 
 from .verificationclassifier import VerificationSystem
 
-Registry.register_resource_creator(VisionClient.SUBTYPE, VerificationSystem.MODEL, ResourceCreatorRegistration(VerificationSystem.new, VerificationSystem.validate))
+Registry.register_resource_creator(VisionClient.API, VerificationSystem.MODEL, ResourceCreatorRegistration(VerificationSystem.new, VerificationSystem.validate))
