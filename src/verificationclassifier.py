@@ -186,8 +186,8 @@ class VerificationSystem(Vision, Reconfigurable):
         if camera_name != self.camera_name:
             raise Exception(
                 f"camera {camera_name} was not declared in the camera_name dependency")
-        cam_images = await self.camera.get_images()
-        if len(cam_images) == 0:
+        cam_images, _ = await self.camera.get_images()
+        if cam_images is None or len(cam_images) == 0:
             raise ValueError("No images returned by get_images")
         cam_image = cam_images[0]
         if return_image:
@@ -212,8 +212,8 @@ class VerificationSystem(Vision, Reconfigurable):
         if camera_name != self.camera_name:
             raise Exception(
                 f"camera {camera_name} was not declared in the camera_name dependency")
-        cam_images = await self.camera.get_images()
-        if len(cam_images) == 0:
+        cam_images, _ = await self.camera.get_images()
+        if cam_images is None or len(cam_images) == 0:
             raise ValueError("No images returned by get_images")
         return await self.get_classifications(cam_images[0], 1)
 
