@@ -186,7 +186,10 @@ class VerificationSystem(Vision, Reconfigurable):
         if camera_name != self.camera_name:
             raise Exception(
                 f"camera {camera_name} was not declared in the camera_name dependency")
-        cam_image = await self.camera.get_image(mime_type="image/jpeg")
+        cam_images, _ = await self.camera.get_images()
+        if cam_images is None or len(cam_images) == 0:
+            raise ValueError("No images returned by get_images")
+        cam_image = cam_images[0]
         if return_image:
             result.image = cam_image
         if return_classifications:
@@ -209,8 +212,10 @@ class VerificationSystem(Vision, Reconfigurable):
         if camera_name != self.camera_name:
             raise Exception(
                 f"camera {camera_name} was not declared in the camera_name dependency")
-        cam_image = await self.camera.get_image(mime_type="image/jpeg")
-        return await self.get_classifications(cam_image, 1)
+        cam_images, _ = await self.camera.get_images()
+        if cam_images is None or len(cam_images) == 0:
+            raise ValueError("No images returned by get_images")
+        return await self.get_classifications(cam_images[0], 1)
 
     async def get_classifications(self,
                                   image: ViamImage,
