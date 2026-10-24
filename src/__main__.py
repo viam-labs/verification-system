@@ -1,7 +1,8 @@
 import asyncio
 
-from viam.services.vision import VisionClient
 from viam.module.module import Module
+from viam.services.vision import VisionClient
+
 from .verificationclassifier import VerificationSystem
 
 

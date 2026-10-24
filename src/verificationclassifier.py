@@ -1,24 +1,18 @@
-from typing import Union, ClassVar, Mapping, Any, Dict, Optional, List
-from typing_extensions import Self
-
+import time
 from enum import Enum
+from typing import Any, ClassVar, Dict, List, Mapping, Optional
 
+from typing_extensions import Self
+from viam.components.camera import Camera
+from viam.logging import getLogger
 from viam.media.video import ViamImage
-
 from viam.module.types import Reconfigurable
 from viam.proto.app.robot import ComponentConfig
-from viam.proto.service.vision import Classification
 from viam.proto.common import ResourceName
+from viam.proto.service.vision import Classification
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
-
-from viam.services.vision import Vision, CaptureAllResult
-
-from viam.components.camera import Camera
-
-from viam.logging import getLogger
-
-import time
+from viam.services.vision import CaptureAllResult, Vision
 
 LOGGER = getLogger(__name__)
 
