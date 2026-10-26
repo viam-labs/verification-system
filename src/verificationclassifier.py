@@ -1,24 +1,18 @@
-from typing import Union, ClassVar, Mapping, Any, Dict, Optional, List
-from typing_extensions import Self
-
+import time
 from enum import Enum
+from typing import Any, ClassVar, Dict, List, Mapping, Optional
 
+from typing_extensions import Self
+from viam.components.camera import Camera
+from viam.logging import getLogger
 from viam.media.video import ViamImage
-
 from viam.module.types import Reconfigurable
 from viam.proto.app.robot import ComponentConfig
-from viam.proto.service.vision import Classification
 from viam.proto.common import ResourceName
+from viam.proto.service.vision import Classification
 from viam.resource.base import ResourceBase
 from viam.resource.types import Model, ModelFamily
-
-from viam.services.vision import Vision, CaptureAllResult
-
-from viam.components.camera import Camera
-
-from viam.logging import getLogger
-
-import time
+from viam.services.vision import CaptureAllResult, Vision
 
 LOGGER = getLogger(__name__)
 
@@ -32,9 +26,7 @@ class AlarmState(Enum):
 
 
 class VerificationSystem(Vision, Reconfigurable):
-
-    MODEL: ClassVar[Model] = Model(ModelFamily(
-        "viam-labs", "classifier"), "verification-system")
+    MODEL: ClassVar[Model] = Model(ModelFamily("viam-labs", "classifier"), "verification-system")
     camera_name: str
     camera: Camera
     trigger_1_detector: str  #
@@ -65,40 +57,30 @@ class VerificationSystem(Vision, Reconfigurable):
     @classmethod
     def validate(cls, config: ComponentConfig):
         # verify camera
-        camera_name = config.attributes.fields["camera_name"].string_value.strip(
-        )
+        camera_name = config.attributes.fields["camera_name"].string_value.strip()
         if camera_name == "":
-            raise Exception(
-                "attribute 'camera_name' is required and cannot be blank")
+            raise Exception("attribute 'camera_name' is required and cannot be blank")
         # verify trigger 1 detector
         if config.attributes.fields["trigger_1_confidence"].number_value > 1.0:
-            raise Exception(
-                "attribute 'trigger_1_confidence' must be between 0.0 and 1.0")
+            raise Exception("attribute 'trigger_1_confidence' must be between 0.0 and 1.0")
         # verify trigger 2 detector
         if config.attributes.fields["trigger_2_confidence"].number_value > 1.0:
-            raise Exception(
-                "attribute 'trigger_2_confidence' must be between 0.0 and 1.0")
+            raise Exception("attribute 'trigger_2_confidence' must be between 0.0 and 1.0")
         if len(config.attributes.fields["trigger_2_labels"].list_value) == 0:
             raise Exception("attribute 'trigger_2_labels' cannot be empty")
-        trigger_2_name = config.attributes.fields["trigger_2_detector"].string_value.strip(
-        )
+        trigger_2_name = config.attributes.fields["trigger_2_detector"].string_value.strip()
         if trigger_2_name == "":
-            raise Exception(
-                "attribute 'trigger_2_detector' is required and cannot be blank")
+            raise Exception("attribute 'trigger_2_detector' is required and cannot be blank")
         # verify verification module
         if config.attributes.fields["verification_confidence"].number_value > 1.0:
-            raise Exception(
-                "attribute 'verification_confidence' must be between 0.0 and 1.0")
+            raise Exception("attribute 'verification_confidence' must be between 0.0 and 1.0")
         if len(config.attributes.fields["verification_labels"].list_value) == 0:
             raise Exception("attribute 'verification_labels' cannot be empty")
-        verification_name = config.attributes.fields["verification_detector"].string_value.strip(
-        )
+        verification_name = config.attributes.fields["verification_detector"].string_value.strip()
         if verification_name == "":
-            raise Exception(
-                "attribute 'verification_detector' is required and cannot be blank")
+            raise Exception("attribute 'verification_detector' is required and cannot be blank")
         # return dependencies
-        trigger_1_name = config.attributes.fields["trigger_1_detector"].string_value.strip(
-        )
+        trigger_1_name = config.attributes.fields["trigger_1_detector"].string_value.strip()
         if trigger_1_name == "":
             return [trigger_2_name, camera_name, verification_name]
         else:
@@ -109,33 +91,25 @@ class VerificationSystem(Vision, Reconfigurable):
     # Handles attribute reconfiguration
     def reconfigure(self, config: ComponentConfig, dependencies: Mapping[ResourceName, ResourceBase]):
         self.alarm_state = AlarmState.TRIGGER_1
-        self.camera_name = config.attributes.fields["camera_name"].string_value.strip(
-        )
+        self.camera_name = config.attributes.fields["camera_name"].string_value.strip()
         self.camera = dependencies[Camera.get_resource_name(self.camera_name)]
         # the 1st trigger
         self.trigger_1_detector = None
-        trigger_1_name = config.attributes.fields["trigger_1_detector"].string_value.strip(
-        )
+        trigger_1_name = config.attributes.fields["trigger_1_detector"].string_value.strip()
         if trigger_1_name != "":
-            self.trigger_1_detector = dependencies[Vision.get_resource_name(
-                trigger_1_name)]
+            self.trigger_1_detector = dependencies[Vision.get_resource_name(trigger_1_name)]
         self.trigger_1_labels = config.attributes.fields["trigger_1_labels"].list_value
         self.trigger_1_confidence = config.attributes.fields["trigger_1_confidence"].number_value or 0.2
         # the 2nd trigger
-        trigger_2_name = config.attributes.fields["trigger_2_detector"].string_value.strip(
-        )
+        trigger_2_name = config.attributes.fields["trigger_2_detector"].string_value.strip()
         self.trigger_2_detector = dependencies[Vision.get_resource_name(trigger_2_name)]
         self.trigger_2_labels = config.attributes.fields["trigger_2_labels"].list_value
-        self.trigger_2_confidence = config.attributes.fields[
-            "trigger_2_confidence"].number_value or 0.5
+        self.trigger_2_confidence = config.attributes.fields["trigger_2_confidence"].number_value or 0.5
         # the verification module
-        verification_name = config.attributes.fields["verification_detector"].string_value.strip(
-        )
-        self.verification_detector = dependencies[Vision.get_resource_name(
-            verification_name)]
+        verification_name = config.attributes.fields["verification_detector"].string_value.strip()
+        self.verification_detector = dependencies[Vision.get_resource_name(verification_name)]
         self.verification_labels = config.attributes.fields["verification_labels"].list_value
-        self.verification_confidence = config.attributes.fields[
-            "verification_confidence"].number_value or 0.8
+        self.verification_confidence = config.attributes.fields["verification_confidence"].number_value or 0.8
         # the timing
         self.countdown_time_s = config.attributes.fields["countdown_time_s"].number_value or 20
         self.disarmed_time_s = config.attributes.fields["disarmed_time_s"].number_value or 10
@@ -161,14 +135,12 @@ class VerificationSystem(Vision, Reconfigurable):
         return
 
     async def get_properties(
-            self,
-            *,
-            extra: Optional[Mapping[str, Any]] = None,
-            timeout: Optional[float] = None) -> Vision.Properties:
+        self, *, extra: Optional[Mapping[str, Any]] = None, timeout: Optional[float] = None
+    ) -> Vision.Properties:
         return Vision.Properties(
-                classifications_supported=True,
-                detections_supported=False,
-                object_point_clouds_supported=False,
+            classifications_supported=True,
+            detections_supported=False,
+            object_point_clouds_supported=False,
         )
 
     async def capture_all_from_camera(
@@ -184,8 +156,7 @@ class VerificationSystem(Vision, Reconfigurable):
     ) -> CaptureAllResult:
         result = CaptureAllResult()
         if camera_name != self.camera_name:
-            raise Exception(
-                f"camera {camera_name} was not declared in the camera_name dependency")
+            raise Exception(f"camera {camera_name} was not declared in the camera_name dependency")
         cam_images, _ = await self.camera.get_images()
         if cam_images is None or len(cam_images) == 0:
             raise ValueError("No images returned by get_images")
@@ -201,29 +172,31 @@ class VerificationSystem(Vision, Reconfigurable):
             result.objects = []
         return result
 
-    async def get_classifications_from_camera(self,
-                                              camera_name: str,
-                                              count: int,
-                                              *,
-                                              extra: Optional[Dict[str,
-                                                                   Any]] = None,
-                                              timeout: Optional[float] = None,
-                                              **kwargs) -> List[Classification]:
+    async def get_classifications_from_camera(
+        self,
+        camera_name: str,
+        count: int,
+        *,
+        extra: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        **kwargs,
+    ) -> List[Classification]:
         if camera_name != self.camera_name:
-            raise Exception(
-                f"camera {camera_name} was not declared in the camera_name dependency")
+            raise Exception(f"camera {camera_name} was not declared in the camera_name dependency")
         cam_images, _ = await self.camera.get_images()
         if cam_images is None or len(cam_images) == 0:
             raise ValueError("No images returned by get_images")
         return await self.get_classifications(cam_images[0], 1)
 
-    async def get_classifications(self,
-                                  image: ViamImage,
-                                  count: int,
-                                  *,
-                                  extra: Optional[Dict[str, Any]] = None,
-                                  timeout: Optional[float] = None,
-                                  **kwargs) -> List[Classification]:
+    async def get_classifications(
+        self,
+        image: ViamImage,
+        count: int,
+        *,
+        extra: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+        **kwargs,
+    ) -> List[Classification]:
         last_disarmed_by = await self.process_image(image)
         if last_disarmed_by != "":
             self.last_disarmed_by = last_disarmed_by
@@ -231,8 +204,7 @@ class VerificationSystem(Vision, Reconfigurable):
         if self.alarm_state is AlarmState.COUNTDOWN:
             elapsed_time = time.time() - self.start_time
             time_remaining = self.countdown_time_s - elapsed_time
-            class_name = class_name + \
-                f": {time_remaining:.0f} s remain"
+            class_name = class_name + f": {time_remaining:.0f} s remain"
         if self.alarm_state is AlarmState.DISARMED:
             elapsed_time = time.time() - self.start_time
             time_remaining = self.disarmed_time_s - elapsed_time
@@ -245,15 +217,21 @@ class VerificationSystem(Vision, Reconfigurable):
             if self.trigger_1_detector is None:
                 self.alarm_state = AlarmState.TRIGGER_2  # go straight to trigger 2
             else:
-                detections = await self.trigger_1_detector.get_detections(
-                    image)
+                detections = await self.trigger_1_detector.get_detections(image)
                 for detection in detections:
-                    if detection.class_name in self.trigger_1_labels and detection.confidence > self.trigger_1_confidence:
+                    if (
+                        detection.class_name in self.trigger_1_labels
+                        and detection.confidence > self.trigger_1_confidence
+                    ):
                         self.alarm_state = AlarmState.TRIGGER_2
         if self.alarm_state is AlarmState.TRIGGER_2:
             detections = await self.trigger_2_detector.get_detections(image)
             for detection in detections:
-                if detection.class_name in self.trigger_2_labels and detection.confidence > self.trigger_2_confidence and not self.disable_alarm:
+                if (
+                    detection.class_name in self.trigger_2_labels
+                    and detection.confidence > self.trigger_2_confidence
+                    and not self.disable_alarm
+                ):
                     self.start_time = time.time()
                     self.alarm_state = AlarmState.COUNTDOWN
                     self.detect_count = 0
@@ -270,7 +248,10 @@ class VerificationSystem(Vision, Reconfigurable):
                 return ""
             detections = await self.verification_detector.get_detections(image)
             for detection in detections:
-                if detection.class_name in self.verification_labels and detection.confidence > self.verification_confidence:
+                if (
+                    detection.class_name in self.verification_labels
+                    and detection.confidence > self.verification_confidence
+                ):
                     self.start_time = time.time()
                     self.alarm_state = AlarmState.DISARMED
                     return detection.class_name
